@@ -1,8 +1,18 @@
 import Fastify from 'fastify';
+import fastifyStatic from '@fastify/static';
 import { contactRoutes } from './routes/contact.routes';
 import prisma from './lib/prisma';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const fastify = Fastify({ logger: true });
+
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, '../public'),
+  prefix: '/',
+});
 
 fastify.register(contactRoutes);
 
