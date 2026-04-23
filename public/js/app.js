@@ -1,5 +1,8 @@
 const API_URL = '/contacts';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^\d{11}$/;
+
 const form = document.getElementById('contactForm');
 const formTitle = document.getElementById('formTitle');
 const contactId = document.getElementById('contactId');
@@ -18,6 +21,44 @@ function showToast(message, type = 'success') {
   setTimeout(() => {
     toast.className = 'toast';
   }, 3000);
+}
+
+function validateForm() {
+  const name = nameInput.value.trim();
+  const email = emailInput.value.trim();
+  const phone = phoneInput.value.trim();
+
+  if (!name) {
+    showToast('Nome é obrigatório', 'error');
+    nameInput.focus();
+    return false;
+  }
+
+  if (!email) {
+    showToast('Email é obrigatório', 'error');
+    emailInput.focus();
+    return false;
+  }
+
+  if (!EMAIL_REGEX.test(email)) {
+    showToast('Email inválido', 'error');
+    emailInput.focus();
+    return false;
+  }
+
+  if (!phone) {
+    showToast('Telefone é obrigatório', 'error');
+    phoneInput.focus();
+    return false;
+  }
+
+  if (!PHONE_REGEX.test(phone)) {
+    showToast('Telefone inválido (deve ter 11 dígitos numéricos)', 'error');
+    phoneInput.focus();
+    return false;
+  }
+
+  return true;
 }
 
 async function fetchContacts() {
@@ -105,10 +146,12 @@ async function deleteContact(id) {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   
+  if (!validateForm()) return;
+  
   const data = {
-    name: nameInput.value,
-    email: emailInput.value,
-    phone: phoneInput.value
+    name: nameInput.value.trim(),
+    email: emailInput.value.trim(),
+    phone: phoneInput.value.trim()
   };
   
   const isEditing = contactId.value !== '';
@@ -122,12 +165,14 @@ form.addEventListener('submit', async (e) => {
       body: JSON.stringify(data)
     });
     
+    const result = await response.json();
+    
     if (response.ok) {
       showToast(isEditing ? 'Contato atualizado!' : 'Contato adicionado!');
       resetForm();
       fetchContacts();
-    } else if (response.status === 409) {
-      showToast('Email já cadastrado', 'error');
+    } else if (response.status === 400 || response.status === 409) {
+      showToast(result.error, 'error');
     } else {
       showToast('Erro ao salvar contato', 'error');
     }
@@ -137,5 +182,9 @@ form.addEventListener('submit', async (e) => {
 });
 
 cancelBtn.addEventListener('click', resetForm);
+
+phoneInput.addEventListener('input', function() {
+  this.value = this.value.replace(/\D/g, '');
+});
 
 fetchContacts();

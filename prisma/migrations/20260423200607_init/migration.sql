@@ -10,3 +10,6 @@ CREATE TABLE "Contact" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Contact_email_key" ON "Contact"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Contact_phone_key" ON "Contact"("phone");

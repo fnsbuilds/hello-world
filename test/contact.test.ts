@@ -1,4 +1,4 @@
-import { test, describe, beforeAll, afterAll, expect, beforeEach, afterEach } from 'vitest';
+import { test, describe, beforeAll, afterAll, expect, beforeEach } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
 import { contactRoutes } from '../src/routes/contact.routes';
 import prisma from '../src/lib/prisma';
@@ -33,7 +33,7 @@ describe('Contact API', () => {
 
     test('should return contacts', async () => {
       await prisma.contact.create({
-        data: { name: 'John', email: 'john@test.com', phone: '123456' },
+        data: { name: 'John', email: 'john@test.com', phone: '11999999999' },
       });
       const response = await app.inject({
         method: 'GET',
@@ -51,7 +51,7 @@ describe('Contact API', () => {
       const response = await app.inject({
         method: 'POST',
         url: '/contacts',
-        payload: { name: 'Jane', email: 'jane@test.com', phone: '654321' },
+        payload: { name: 'Jane', email: 'jane@test.com', phone: '21988888888' },
       });
       expect(response.statusCode).toBe(201);
       const contact = JSON.parse(response.payload);
@@ -61,14 +61,58 @@ describe('Contact API', () => {
 
     test('should return 409 for duplicate email', async () => {
       await prisma.contact.create({
-        data: { name: 'John', email: 'john@test.com', phone: '123' },
+        data: { name: 'John', email: 'john@test.com', phone: '11999999999' },
       });
       const response = await app.inject({
         method: 'POST',
         url: '/contacts',
-        payload: { name: 'Jane', email: 'john@test.com', phone: '456' },
+        payload: { name: 'Jane', email: 'john@test.com', phone: '21988888888' },
       });
       expect(response.statusCode).toBe(409);
+      expect(JSON.parse(response.payload).error).toBe('Email já cadastrado');
+    });
+
+    test('should return 409 for duplicate phone', async () => {
+      await prisma.contact.create({
+        data: { name: 'John', email: 'john@test.com', phone: '11999999999' },
+      });
+      const response = await app.inject({
+        method: 'POST',
+        url: '/contacts',
+        payload: { name: 'Jane', email: 'jane@test.com', phone: '11999999999' },
+      });
+      expect(response.statusCode).toBe(409);
+      expect(JSON.parse(response.payload).error).toBe('Telefone já cadastrado');
+    });
+
+    test('should return 400 for invalid phone', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/contacts',
+        payload: { name: 'Jane', email: 'jane@test.com', phone: '123' },
+      });
+      expect(response.statusCode).toBe(400);
+      expect(JSON.parse(response.payload).error).toBe('Telefone inválido (deve ter 11 dígitos numéricos)');
+    });
+
+    test('should return 400 for invalid email', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/contacts',
+        payload: { name: 'Jane', email: 'invalid-email', phone: '11999999999' },
+      });
+      expect(response.statusCode).toBe(400);
+      expect(JSON.parse(response.payload).error).toBe('Email inválido');
+    });
+
+    test('should return 400 for empty name', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/contacts',
+        payload: { name: '   ', email: 'jane@test.com', phone: '11999999999' },
+      });
+      expect(response.statusCode).toBe(400);
+      expect(JSON.parse(response.payload).error).toBe('Nome é obrigatório');
     });
   });
 
@@ -83,7 +127,7 @@ describe('Contact API', () => {
 
     test('should return contact by id', async () => {
       const contact = await prisma.contact.create({
-        data: { name: 'John', email: 'john@test.com', phone: '123' },
+        data: { name: 'John', email: 'john@test.com', phone: '11999999999' },
       });
       const response = await app.inject({
         method: 'GET',
@@ -97,7 +141,7 @@ describe('Contact API', () => {
   describe('PUT /contacts/:id', () => {
     test('should update contact', async () => {
       const contact = await prisma.contact.create({
-        data: { name: 'John', email: 'john@test.com', phone: '123' },
+        data: { name: 'John', email: 'john@test.com', phone: '11999999999' },
       });
       const response = await app.inject({
         method: 'PUT',
@@ -112,7 +156,7 @@ describe('Contact API', () => {
   describe('DELETE /contacts/:id', () => {
     test('should delete contact', async () => {
       const contact = await prisma.contact.create({
-        data: { name: 'John', email: 'john@test.com', phone: '123' },
+        data: { name: 'John', email: 'john@test.com', phone: '11999999999' },
       });
       const response = await app.inject({
         method: 'DELETE',
