@@ -2,6 +2,12 @@
 
 API RESTful para gerenciamento de contatos construída com Fastify, TypeScript e Prisma.
 
+## Documentação Interativa
+
+Acesse a documentação Swagger em: **http://localhost:3000/docs**
+
+---
+
 ## Base URL
 
 ```

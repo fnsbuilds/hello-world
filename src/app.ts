@@ -1,5 +1,7 @@
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
+import fastifySwagger from '@fastify/swagger';
+import fastifySwaggerUi from '@fastify/swagger-ui';
 import { contactRoutes } from './routes/contact.routes';
 import prisma from './lib/prisma';
 import path from 'path';
@@ -14,11 +16,39 @@ fastify.register(fastifyStatic, {
   prefix: '/',
 });
 
+fastify.register(fastifySwagger, {
+  openapi: {
+    info: {
+      title: 'API de Cadastro de Contatos',
+      description: 'API RESTful para gerenciamento de contatos',
+      version: '1.0.0',
+    },
+    servers: [
+      {
+        url: 'http://localhost:3000',
+        description: 'Servidor de desenvolvimento',
+      },
+    ],
+    tags: [
+      { name: 'Contatos', description: 'Operações com contatos' },
+    ],
+  },
+});
+
+fastify.register(fastifySwaggerUi, {
+  routePrefix: '/docs',
+  uiConfig: {
+    docExpansion: 'list',
+    deepLinking: true,
+  },
+});
+
 fastify.register(contactRoutes);
 
 const start = async () => {
   try {
     await fastify.listen({ port: 3000 });
+    console.log(`API Docs: http://localhost:3000/docs`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
