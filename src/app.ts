@@ -1,10 +1,10 @@
 import Fastify from 'fastify';
+import { contactRoutes } from './routes/contact.routes';
+import prisma from './lib/prisma';
 
 const fastify = Fastify({ logger: true });
 
-fastify.get('/', async (request, reply) => {
-  return { message: 'Hello, Felipe' };
-});
+fastify.register(contactRoutes);
 
 const start = async () => {
   try {
@@ -15,8 +15,16 @@ const start = async () => {
   }
 };
 
-export default fastify;
+export { fastify };
 
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop())) {
   start();
 }
+
+const shutdown = async () => {
+  await prisma.$disconnect();
+  process.exit(0);
+};
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
