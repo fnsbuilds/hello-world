@@ -1,7 +1,20 @@
 const API_URL = '/contacts';
+const AUTH_URL = '/auth';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^\d{11}$/;
+
+const authSection = document.getElementById('authSection');
+const contactSection = document.getElementById('contactSection');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+const resetPasswordForm = document.getElementById('resetPasswordForm');
+const tabLogin = document.getElementById('tabLogin');
+const tabRegister = document.getElementById('tabRegister');
+const logoutBtn = document.getElementById('logoutBtn');
+const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+const backToLogin = document.getElementById('backToLogin');
 
 const form = document.getElementById('contactForm');
 const formTitle = document.getElementById('formTitle');
@@ -15,12 +28,241 @@ const contactsList = document.getElementById('contactsList');
 const loading = document.getElementById('loading');
 const toast = document.getElementById('toast');
 
+let token = localStorage.getItem('token');
+
 function showToast(message, type = 'success') {
   toast.textContent = message;
   toast.className = `toast ${type} show`;
   setTimeout(() => {
     toast.className = 'toast';
   }, 3000);
+}
+
+function getAuthHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+}
+
+function showAuth() {
+  authSection.style.display = 'block';
+  contactSection.style.display = 'none';
+  logoutBtn.style.display = 'none';
+}
+
+function showContacts() {
+  authSection.style.display = 'none';
+  contactSection.style.display = 'block';
+  logoutBtn.style.display = 'block';
+}
+
+function updateUI() {
+  if (token) {
+    showContacts();
+    fetchContacts();
+  } else {
+    checkResetToken();
+    if (!getTokenFromUrl()) {
+      showAuth();
+    }
+  }
+}
+
+tabLogin.addEventListener('click', () => {
+  loginForm.style.display = 'block';
+  registerForm.style.display = 'none';
+  tabLogin.classList.add('active');
+  tabRegister.classList.remove('active');
+});
+
+tabRegister.addEventListener('click', () => {
+  loginForm.style.display = 'none';
+  registerForm.style.display = 'block';
+  tabLogin.classList.remove('active');
+  tabRegister.classList.add('active');
+});
+
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  try {
+    const response = await fetch(`${AUTH_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      token = result.token;
+      localStorage.setItem('token', token);
+      showToast('Login realizado com sucesso!');
+      loginForm.reset();
+      updateUI();
+    } else {
+      showToast(result.error, 'error');
+    }
+  } catch (error) {
+    showToast('Erro ao fazer login', 'error');
+  }
+});
+
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('registerEmail').value.trim();
+  const password = document.getElementById('registerPassword').value;
+  const confirmPassword = document.getElementById('registerConfirmPassword').value;
+
+  if (password !== confirmPassword) {
+    showToast('As senhas não conferem', 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${AUTH_URL}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      token = result.token;
+      localStorage.setItem('token', token);
+      showToast('Conta criada com sucesso!');
+      registerForm.reset();
+      updateUI();
+    } else {
+      showToast(result.error, 'error');
+    }
+  } catch (error) {
+    showToast('Erro ao criar conta', 'error');
+  }
+});
+
+logoutBtn.addEventListener('click', () => {
+  token = null;
+  localStorage.removeItem('token');
+  showToast('Logout realizado!');
+  updateUI();
+});
+
+function showForgotPassword() {
+  loginForm.style.display = 'none';
+  registerForm.style.display = 'none';
+  forgotPasswordForm.style.display = 'block';
+  resetPasswordForm.style.display = 'none';
+  tabLogin.parentElement.style.display = 'none';
+}
+
+function showLogin() {
+  loginForm.style.display = 'block';
+  registerForm.style.display = 'none';
+  forgotPasswordForm.style.display = 'none';
+  resetPasswordForm.style.display = 'none';
+  tabLogin.parentElement.style.display = 'flex';
+  tabLogin.classList.add('active');
+  tabRegister.classList.remove('active');
+}
+
+function showResetPassword() {
+  loginForm.style.display = 'none';
+  registerForm.style.display = 'none';
+  forgotPasswordForm.style.display = 'none';
+  resetPasswordForm.style.display = 'block';
+  tabLogin.parentElement.style.display = 'none';
+}
+
+function getTokenFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('token');
+}
+
+forgotPasswordLink.addEventListener('click', (e) => {
+  e.preventDefault();
+  showForgotPassword();
+});
+
+backToLogin.addEventListener('click', (e) => {
+  e.preventDefault();
+  showLogin();
+});
+
+forgotPasswordForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('forgotEmail').value.trim();
+
+  try {
+    const response = await fetch(`${AUTH_URL}/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      showToast('Email de recuperação enviado! Verifique sua caixa de entrada.');
+      forgotPasswordForm.reset();
+    } else {
+      showToast(result.error, 'error');
+    }
+  } catch (error) {
+    showToast('Erro ao enviar email de recuperação', 'error');
+  }
+});
+
+resetPasswordForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const password = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmNewPassword').value;
+  const resetToken = getTokenFromUrl();
+
+  if (!resetToken) {
+    showToast('Token inválido', 'error');
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    showToast('As senhas não conferem', 'error');
+    return;
+  }
+
+  if (password.length < 6) {
+    showToast('Senha deve ter pelo menos 6 caracteres', 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${AUTH_URL}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: resetToken, password })
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      showToast('Senha alterada com sucesso! Faça login com a nova senha.');
+      window.location.href = '/';
+    } else {
+      showToast(result.error, 'error');
+    }
+  } catch (error) {
+    showToast('Erro ao redefinir senha', 'error');
+  }
+});
+
+function checkResetToken() {
+  const resetToken = getTokenFromUrl();
+  if (resetToken) {
+    showResetPassword();
+  }
 }
 
 function validateForm() {
@@ -66,7 +308,14 @@ async function fetchContacts() {
   contactsList.innerHTML = '';
   
   try {
-    const response = await fetch(API_URL);
+    const response = await fetch(API_URL, { headers: getAuthHeaders() });
+    
+    if (response.status === 401) {
+      showToast('Sessão expirada. Faça login novamente.', 'error');
+      logoutBtn.click();
+      return;
+    }
+    
     const contacts = await response.json();
     loading.style.display = 'none';
     
@@ -131,7 +380,17 @@ async function deleteContact(id) {
   if (!confirm('Deseja realmente excluir este contato?')) return;
   
   try {
-    const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+    const response = await fetch(`${API_URL}/${id}`, { 
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    
+    if (response.status === 401) {
+      showToast('Sessão expirada. Faça login novamente.', 'error');
+      logoutBtn.click();
+      return;
+    }
+    
     if (response.ok) {
       showToast('Contato excluído com sucesso!');
       fetchContacts();
@@ -161,9 +420,15 @@ form.addEventListener('submit', async (e) => {
   try {
     const response = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data)
     });
+    
+    if (response.status === 401) {
+      showToast('Sessão expirada. Faça login novamente.', 'error');
+      logoutBtn.click();
+      return;
+    }
     
     const result = await response.json();
     
@@ -187,4 +452,4 @@ phoneInput.addEventListener('input', function() {
   this.value = this.value.replace(/\D/g, '');
 });
 
-fetchContacts();
+updateUI();

@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { ContactService } from '../services/contact.service';
-import { CreateContactInput, UpdateContactInput } from '../types/contact';
+import { ContactService } from '../services/contact.service.js';
+import { CreateContactInput, UpdateContactInput } from '../types/contact.js';
+import { authenticate } from '../middleware/auth.js';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^\d{11}$/;
@@ -89,6 +90,8 @@ const updateContactSchema = {
 };
 
 export async function contactRoutes(fastify: FastifyInstance) {
+  fastify.addHook('preHandler', authenticate);
+
   fastify.get('/contacts', {
     schema: {
       tags: ['Contatos'],
@@ -100,7 +103,8 @@ export async function contactRoutes(fastify: FastifyInstance) {
       },
     },
     async handler(request: FastifyRequest, reply: FastifyReply) {
-      const contacts = await ContactService.findAll();
+      const userId = request.user.userId;
+      const contacts = await ContactService.findAll(userId);
       return reply.send(contacts);
     },
   });
@@ -122,7 +126,8 @@ export async function contactRoutes(fastify: FastifyInstance) {
     },
     async handler(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
       const { id } = request.params;
-      const contact = await ContactService.findById(id);
+      const userId = request.user.userId;
+      const contact = await ContactService.findById(id, userId);
       if (!contact) {
         return reply.status(404).send({ error: 'Contato não encontrado' });
       }
@@ -138,8 +143,10 @@ export async function contactRoutes(fastify: FastifyInstance) {
         return reply.status(400).send({ error: validationError });
       }
 
+      const userId = request.user.userId;
+
       try {
-        const contact = await ContactService.create(request.body);
+        const contact = await ContactService.create(request.body, userId);
         return reply.status(201).send(contact);
       } catch (error) {
         if ((error as any).code === 'P2002') {
@@ -159,9 +166,11 @@ export async function contactRoutes(fastify: FastifyInstance) {
         return reply.status(400).send({ error: validationError });
       }
 
+      const { id } = request.params;
+      const userId = request.user.userId;
+
       try {
-        const { id } = request.params;
-        const contact = await ContactService.update(id, request.body);
+        const contact = await ContactService.update(id, request.body, userId);
         return reply.send(contact);
       } catch (error) {
         if ((error as any).code === 'P2025') {
@@ -192,9 +201,11 @@ export async function contactRoutes(fastify: FastifyInstance) {
       },
     },
     async handler(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+      const { id } = request.params;
+      const userId = request.user.userId;
+
       try {
-        const { id } = request.params;
-        await ContactService.delete(id);
+        await ContactService.delete(id, userId);
         return reply.status(204).send();
       } catch (error) {
         if ((error as any).code === 'P2025') {

@@ -2,7 +2,8 @@ import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
-import { contactRoutes } from './routes/contact.routes';
+import { contactRoutes } from './routes/contact.routes.js';
+import { authRoutes } from './routes/auth.routes.js';
 import prisma from './lib/prisma';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -44,6 +45,7 @@ fastify.register(fastifySwaggerUi, {
 });
 
 fastify.register(contactRoutes);
+fastify.register(authRoutes);
 
 const start = async () => {
   try {
@@ -57,7 +59,7 @@ const start = async () => {
 
 export { fastify };
 
-if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop())) {
+if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop() || '')) {
   start();
 }
 

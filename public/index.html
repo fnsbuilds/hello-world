@@ -10,35 +10,104 @@
   <div class="container">
     <header>
       <h1>Cadastro de Contatos</h1>
+      <button id="logoutBtn" class="btn-secondary" style="display: none;">Sair</button>
     </header>
 
-    <section class="form-section">
-      <h2 id="formTitle">Novo Contato</h2>
-      <form id="contactForm">
-        <input type="hidden" id="contactId">
+    <section id="authSection">
+      <div class="auth-tabs">
+        <button id="tabLogin" class="auth-tab active">Login</button>
+        <button id="tabRegister" class="auth-tab">Cadastrar</button>
+      </div>
+
+      <form id="loginForm" class="auth-form">
+        <h2>Entrar</h2>
         <div class="form-group">
-          <label for="name">Nome</label>
-          <input type="text" id="name" placeholder="Nome completo">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="exemplo@email.com" required>
         </div>
         <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" placeholder="exemplo@email.com">
+          <label for="loginPassword">Senha</label>
+          <input type="password" id="loginPassword" placeholder="Sua senha" required>
+        </div>
+        <button type="submit" class="btn-primary">Entrar</button>
+        <p class="forgot-password">
+          <a href="#" id="forgotPasswordLink">Esqueci minha senha</a>
+        </p>
+      </form>
+
+      <form id="registerForm" class="auth-form" style="display: none;">
+        <h2>Criar Conta</h2>
+        <div class="form-group">
+          <label for="registerEmail">Email</label>
+          <input type="email" id="registerEmail" placeholder="exemplo@email.com" required>
         </div>
         <div class="form-group">
-          <label for="phone">Telefone</label>
-          <input type="tel" id="phone" placeholder="DDD + número (11 dígitos)">
+          <label for="registerPassword">Senha</label>
+          <input type="password" id="registerPassword" placeholder="Mínimo 6 caracteres" minlength="6" required>
         </div>
-        <div class="form-actions">
-          <button type="submit" id="submitBtn">Adicionar</button>
-          <button type="button" id="cancelBtn" class="btn-secondary" style="display: none;">Cancelar</button>
+        <div class="form-group">
+          <label for="registerConfirmPassword">Confirmar Senha</label>
+          <input type="password" id="registerConfirmPassword" placeholder="Confirme sua senha" required>
         </div>
+        <button type="submit" class="btn-primary">Cadastrar</button>
+      </form>
+
+      <form id="forgotPasswordForm" class="auth-form" style="display: none;">
+        <h2>Recuperar Senha</h2>
+        <p style="margin-bottom: 15px; color: #6b7280;">Informe seu email para receber o link de recuperação.</p>
+        <div class="form-group">
+          <label for="forgotEmail">Email</label>
+          <input type="email" id="forgotEmail" placeholder="exemplo@email.com" required>
+        </div>
+        <button type="submit" class="btn-primary">Enviar Link</button>
+        <p class="forgot-password">
+          <a href="#" id="backToLogin">Voltar ao login</a>
+        </p>
+      </form>
+
+      <form id="resetPasswordForm" class="auth-form" style="display: none;">
+        <h2>Nova Senha</h2>
+        <div class="form-group">
+          <label for="newPassword">Nova Senha</label>
+          <input type="password" id="newPassword" placeholder="Mínimo 6 caracteres" minlength="6" required>
+        </div>
+        <div class="form-group">
+          <label for="confirmNewPassword">Confirmar Senha</label>
+          <input type="password" id="confirmNewPassword" placeholder="Confirme sua senha" required>
+        </div>
+        <button type="submit" class="btn-primary">Alterar Senha</button>
       </form>
     </section>
 
-    <section class="contacts-section">
-      <h2>Lista de Contatos</h2>
-      <div id="loading">Carregando...</div>
-      <div id="contactsList"></div>
+    <section id="contactSection" style="display: none;">
+      <section class="form-section">
+        <h2 id="formTitle">Novo Contato</h2>
+        <form id="contactForm">
+          <input type="hidden" id="contactId">
+          <div class="form-group">
+            <label for="name">Nome</label>
+            <input type="text" id="name" placeholder="Nome completo">
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="exemplo@email.com">
+          </div>
+          <div class="form-group">
+            <label for="phone">Telefone</label>
+            <input type="tel" id="phone" placeholder="DDD + número (11 dígitos)">
+          </div>
+          <div class="form-actions">
+            <button type="submit" id="submitBtn">Adicionar</button>
+            <button type="button" id="cancelBtn" class="btn-secondary" style="display: none;">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="contacts-section">
+        <h2>Lista de Contatos</h2>
+        <div id="loading">Carregando...</div>
+        <div id="contactsList"></div>
+      </section>
     </section>
   </div>
 
